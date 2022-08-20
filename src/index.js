@@ -116,8 +116,8 @@ export default class ResizablePanels extends Component {
       currentPanel: index,
       initialPos: this.displayDirectionIsColumn() ? e.clientY : e.clientX
     });
-    if (this.props.startResize) {
-      this.props.startResize();
+    if (this.props.onResizeStart) {
+      this.props.onResizeStart();
     }
   }
 
@@ -135,28 +135,38 @@ export default class ResizablePanels extends Component {
         !this.props.minPanelSize ||
         nextPanelsSize.every((panelSize) => panelSize >= this.props.minPanelSize)
       ) {
-        this.setState({
-          ...this.state,
-          initialPos: currentMousePosition,
-          panelsSize: nextPanelsSize,
-          displacement
-        });
-      }
-      if (this.props.onResize) {
-        this.props.onResize(displacement);
+        this.setState(
+          (prevState) => ({
+            ...prevState,
+            initialPos: currentMousePosition,
+            panelsSize: nextPanelsSize,
+            displacement,
+          }),
+          () => {
+            if (this.props.onResize) {
+              this.props.onResize(this.state.panelsSize);
+            }
+          }
+        );
       }
     }
   };
 
   stopResize = () => {
-    this.setState({
-      ...this.state,
-      resizing: false,
-      currentPanel: null,
-      displacement: 0
-    });
-    if (this.props.stopResize) {
-      this.props.stopResize();
+    if (this.state.resizing) {
+      this.setState(
+        (prevState) => ({
+          ...prevState,
+          resizing: false,
+          currentPanel: null,
+          displacement: 0,
+        }),
+        () => {
+          if (this.props.onResizeEnd) {
+            this.props.onResizeEnd(this.state.panelsSize);
+          }
+        }
+      );
     }
   };
 
